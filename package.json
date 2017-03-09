@@ -1,0 +1,14 @@
+{
+  "name": "tray-ticker",
+  "version": "1.0.0",
+  "description": "A minimal stock ticker tray application",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron ."
+  },
+  "devDependencies": {
+    "electron-prebuilt": "^1.2.0",
+    "request": "2.72.0",
+    "numeral": "1.5.3"
+  }
+}
