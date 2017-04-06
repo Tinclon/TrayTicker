@@ -2,9 +2,10 @@ const {app, Tray, /*BrowserWindow,*/ TouchBar, shell} = require("electron");
 const {TouchBarButton, TouchBarLabel} = TouchBar;
 const request = require('request');
 const numeral = require('numeral');
+const refreshms = 300000;
 //const spinner = ["⠿","⠷","⠶","⠦","⠤","⠄","⠀"];
 const spinner = ["⦙","⫶","𝄈","ᐧ"," "];
-const refreshms = 300000;
+let spinnerIndex = -1;
 
 const tickerConfig = {
     btc: {
@@ -54,7 +55,7 @@ function createTicker(ticker){
         updateDisplay();
     });
 
-    function fetchCurrentPrice(spinnerIndex) {
+    function fetchCurrentPrice() {
         for (let key in data) {
             if(data.hasOwnProperty(key) && !key.startsWith("old")) {
                 data["old"+key] = JSON.parse(JSON.stringify(data[key]));
@@ -72,7 +73,7 @@ function createTicker(ticker){
                 data.amount.v = data.price.v * ticker.s;
 
                 showDiff = Math.abs(data.oldprice.v - data.price.v) > 0.01;
-                updateDisplay(spinnerIndex);
+                updateDisplay();
                 showDiff && setTimeout(() => (showDiff = !showDiff), (refreshms / 10));
             } else {
                 tray.setTitle(`${spinner[spinnerIndex]}Error: ${(response && response.statusCode || "No Response")}`);
@@ -88,7 +89,7 @@ function createTicker(ticker){
         return numberWithSuperDecimal;
     }
 
-    function updateDisplay(spinnerIndex) {
+    function updateDisplay() {
         const text = decimalToSuper(numeral(data[display].v).format(data[display].f)) +
             (!showDiff ? "" :
                 decimalToSuper(numeral(data[display].v - data["old" + display].v)
@@ -125,12 +126,11 @@ app.on("ready", () => {
     window.setTouchBar(touchBar);
     */
 
-    let spinnerIndex = -1;
     function fetchPrice(delay) {
         setTimeout(() => {
             spinnerIndex = (++spinnerIndex) % spinner.length;
             fetchPrice(refreshms / spinner.length);
-            tickers.forEach(ticker => spinnerIndex === 0 && ticker.fetchCurrentPrice(spinnerIndex) || ticker.updateDisplay(spinnerIndex));
+            tickers.forEach(ticker => spinnerIndex === 0 && ticker.fetchCurrentPrice() || ticker.updateDisplay());
         }, delay);
     }
 
