@@ -9,22 +9,22 @@ let spinnerIndex = -1;
 
 const tickerConfig = {
     btc: {
-        q: "CURRENCY:BTCUSD",
+        q: "BTCUSD=X",  // <- For Yahoo    // "CURRENCY:BTCUSD",    // <- For Google
         i: "btc@2x.png",
         s: 1				// <<- Enter number of 'shares' you own here
     },
     dowjones: {
-        q: "INDEXDJX:.DJI",
+        q: "^DJI",      // <- For Yahoo     // "INDEXDJX:.DJI",     // <- For Google
         i: "dowjones@2x.png",
         s: 1				// <<- Enter number of 'shares' you own here
     },
     nasdaq: {
-        q: "INDEXNASDAQ:.IXIC",
+        q: "^IXIC",     // <- For Yahoo     // "INDEXNASDAQ:.IXIC", // <- For Google
         i: "nasdaq@2x.png",
         s: 1				// <<- Enter number of 'shares' you own here
     },
     cadusd: {
-        q: "CURRENCY:USDCAD",
+        q: "USDCAD=X",  // <- For Yahoo     // "CURRENCY:USDCAD",   // <- For Google
         i: "usdcad@2x.png"
     }
 };
@@ -63,6 +63,7 @@ function createTicker(ticker){
         }
 
         // Using Google Finance (deprecated, but still seems to be working)
+        /*
         request("http://www.google.com/finance/info?infotype=infoquoteall&q=" + ticker.q, function (error, response, body) {
             if (!error && response && response.statusCode === 200) {
                 const finance = JSON.parse(body.replace("// [", "").replace("]",""));
@@ -75,6 +76,32 @@ function createTicker(ticker){
                 showDiff = Math.abs(data.oldprice.v - data.price.v) > 0.01;
                 updateDisplay();
                 showDiff && setTimeout(() => (showDiff = !showDiff), (refreshms / 10));
+            } else {
+                tray.setTitle(`${spinner[spinnerIndex]}Error: ${(response && response.statusCode || "No Response")}`);
+            }
+        });
+        */
+
+        // Using Yahoo Finance (returns less data than google, but at least it's still working)
+        request("https://query1.finance.yahoo.com/v8/finance/chart/" + ticker.q + "?range=1d&interval=5m", function (error, response, body) {
+            if (!error && response && response.statusCode === 200) {
+                const finance = JSON.parse(body);
+
+                if (finance && finance.chart && finance.chart.result && finance.chart.result[0] &&
+                    finance.chart.result[0].indicators && finance.chart.result[0].indicators.quote &&
+                    finance.chart.result[0].indicators.quote[0] && finance.chart.result[0].indicators.quote[0].open) {
+
+                    let opens = finance.chart.result[0].indicators.quote[0].open.filter(open => open);
+                    let index = Math.max(0, opens.length - 1);
+                    data.price.v = parseFloat(opens[index]) / parseFloat(ticker.d || 1.0);
+                    data.change.v = 0;  // TODO: Figure out how to get change data from Yahoo
+                    data.percent.v = 0; // TODO: Figure out how to get percent data from Yahoo
+                    data.amount.v = data.price.v * ticker.s * parseFloat(ticker.d || 1.0);
+
+                    showDiff = Math.abs(data.oldprice.v - data.price.v) > 0.01;
+                    updateDisplay();
+                    showDiff && setTimeout(() => (showDiff = !showDiff), (refreshms / 10));
+                }
             } else {
                 tray.setTitle(`${spinner[spinnerIndex]}Error: ${(response && response.statusCode || "No Response")}`);
             }
