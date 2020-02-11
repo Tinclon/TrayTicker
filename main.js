@@ -11,7 +11,8 @@ const tickerConfig = {
     btc: {
         q: "BTCUSD=X",  // <- For Yahoo    // "CURRENCY:BTCUSD",    // <- For Google
         i: "btc@2x.png",
-        s: 1				// <<- Enter number of 'shares' you own here
+        s: 1,				// <<- Enter number of 'shares' you own here
+        p: "000"			// <<- Enter custom precision here
     },
     dowjones: {
         q: "^DJI",      // <- For Yahoo     // "INDEXDJX:.DJI",     // <- For Google
@@ -34,10 +35,10 @@ function createTicker(ticker){
         touchBarButton = new TouchBarButton({icon: ticker.i}),
         touchBarLabel = new TouchBarLabel({label: ""}),
         data = {
-            price: {f: "$,00.00"},
-            change: {f: "$,0.00"},
-            percent: {f: "0,0.00%"},
-            amount: {f: "$,0.00"}
+            price: {f: `$,00.${ticker.p || "00"}`},
+            change: {f: `$,0.${ticker.p || "00"}`},
+            percent: {f: `0,0.${ticker.p || "00"}%`},
+            amount: {f: `$,0.${ticker.p || "00"}`}
         };
 
     let showDiff = false,
