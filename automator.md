@@ -1,4 +1,4 @@
-== Automator Script
+## Automator Script
 
 ```
 do shell script "
